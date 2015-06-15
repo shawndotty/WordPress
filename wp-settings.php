@@ -30,10 +30,10 @@ global $wp_version, $wp_db_version, $tinymce_version, $required_php_version, $re
 require( ABSPATH . WPINC . '/version.php' );
 
 // Set initial default constants including WP_MEMORY_LIMIT, WP_MAX_MEMORY_LIMIT, WP_DEBUG, WP_CONTENT_DIR and WP_CACHE.
-wp_initial_constants();
+wp_initial_constants(); // From wp-includes/default-constants.php
 
 // Check for the required PHP version and for the MySQL extension or a database drop-in.
-wp_check_php_mysql_versions();
+wp_check_php_mysql_versions(); // From wp-includes/load.php
 
 // Disable magic quotes at runtime. Magic quotes are added using wpdb later in wp-settings.php.
 @ini_set( 'magic_quotes_runtime', 0 );
@@ -43,29 +43,30 @@ wp_check_php_mysql_versions();
 date_default_timezone_set( 'UTC' );
 
 // Turn register_globals off.
-wp_unregister_GLOBALS();
+wp_unregister_GLOBALS(); // From wp-includes/load.php
 
 // Standardize $_SERVER variables across setups.
-wp_fix_server_vars();
+wp_fix_server_vars(); // From wp-includes/load.php
 
 // Check if we have received a request due to missing favicon.ico
-wp_favicon_request();
+wp_favicon_request(); // From wp-includes/load.php
 
 // Check if we're in maintenance mode.
-wp_maintenance();
+wp_maintenance(); // From wp-includes/load.php
 
 // Start loading timer.
-timer_start();
+timer_start(); // From wp-includes/load.php
 
 // Check if we're in WP_DEBUG mode.
-wp_debug_mode();
+wp_debug_mode(); // From wp-includes/load.php
 
 // For an advanced caching plugin to use. Uses a static drop-in because you would only want one.
+// WP_CACHE set in wp-config.php
 if ( WP_CACHE )
 	WP_DEBUG ? include( WP_CONTENT_DIR . '/advanced-cache.php' ) : @include( WP_CONTENT_DIR . '/advanced-cache.php' );
 
 // Define WP_LANG_DIR if not set.
-wp_set_lang_dir();
+wp_set_lang_dir(); // From wp-includes/load.php
 
 // Load early WordPress files.
 require( ABSPATH . WPINC . '/compat.php' );
@@ -76,14 +77,14 @@ require( ABSPATH . WPINC . '/plugin.php' );
 require( ABSPATH . WPINC . '/pomo/mo.php' );
 
 // Include the wpdb class and, if present, a db.php database drop-in.
-require_wp_db();
+require_wp_db(); // From wp-includes/load.php
 
 // Set the database table prefix and the format specifiers for database table columns.
 $GLOBALS['table_prefix'] = $table_prefix;
-wp_set_wpdb_vars();
+wp_set_wpdb_vars(); // From wp-includes/load.php
 
 // Start the WordPress object cache, or an external object cache if the drop-in is present.
-wp_start_object_cache();
+wp_start_object_cache(); // From wp-includes/load.php
 
 // Attach the default filters.
 require( ABSPATH . WPINC . '/default-filters.php' );
@@ -96,7 +97,9 @@ if ( is_multisite() ) {
 	define( 'MULTISITE', false );
 }
 
+// shutdown_action_hood is difined in wp-includes/load.php
 register_shutdown_function( 'shutdown_action_hook' );
+
 
 // Stop most of WordPress from being loaded if we just want the basics.
 if ( SHORTINIT )
@@ -106,7 +109,7 @@ if ( SHORTINIT )
 require_once( ABSPATH . WPINC . '/l10n.php' );
 
 // Run the installer if WordPress is not installed.
-wp_not_installed();
+wp_not_installed(); // From wp-includes/load.php
 
 // Load most of WordPress.
 require( ABSPATH . WPINC . '/class-wp-walker.php' );
@@ -163,11 +166,12 @@ if ( is_multisite() ) {
 
 // Define constants that rely on the API to obtain the default value.
 // Define must-use plugin directory constants, which may be overridden in the sunrise.php drop-in.
-wp_plugin_directory_constants();
+wp_plugin_directory_constants(); // From wp-includes/default-constants.php
 
 $GLOBALS['wp_plugin_paths'] = array();
 
 // Load must-use plugins.
+// wp_get_mu_plugins is defined in wp-includes/load.php
 foreach ( wp_get_mu_plugins() as $mu_plugin ) {
 	include_once( $mu_plugin );
 }
@@ -175,6 +179,7 @@ unset( $mu_plugin );
 
 // Load network activated plugins.
 if ( is_multisite() ) {
+	// wp_get_active_network_plugins is defined in wp-includes/ms-load.php
 	foreach( wp_get_active_network_plugins() as $network_plugin ) {
 		wp_register_plugin_realpath( $network_plugin );
 		include_once( $network_plugin );
@@ -193,9 +198,11 @@ if ( is_multisite() )
 	ms_cookie_constants(  );
 
 // Define constants after multisite is loaded.
+// From wp-includes/default-constants.php
 wp_cookie_constants();
 
 // Define and enforce our SSL constants
+// From wp-includes/default-constants.php
 wp_ssl_constants();
 
 // Create common globals.
@@ -203,14 +210,19 @@ require( ABSPATH . WPINC . '/vars.php' );
 
 // Make taxonomies and posts available to plugins and themes.
 // @plugin authors: warning: these get registered again on the init hook.
+// From wp-includes/taxonomy.php
 create_initial_taxonomies();
+// From wp-includes/post.php
 create_initial_post_types();
 
 // Register the default theme directory root
+// From wp-includes/theme.php
 register_theme_directory( get_theme_root() );
 
 // Load active plugins.
+// From wp-includes/load.php
 foreach ( wp_get_active_and_valid_plugins() as $plugin ) {
+	// From wp-includes/plugin.php
 	wp_register_plugin_realpath( $plugin );
 	include_once( $plugin );
 }
@@ -221,6 +233,7 @@ require( ABSPATH . WPINC . '/pluggable.php' );
 require( ABSPATH . WPINC . '/pluggable-deprecated.php' );
 
 // Set internal encoding.
+// From wp-includes/load.php
 wp_set_internal_encoding();
 
 // Run wp_cache_postload() if object cache is enabled and the function exists.
@@ -237,9 +250,11 @@ if ( WP_CACHE && function_exists( 'wp_cache_postload' ) )
 do_action( 'plugins_loaded' );
 
 // Define constants which affect functionality if not already defined.
+// From wp-includes/default-constants.php
 wp_functionality_constants();
 
 // Add magic quotes and set up $_REQUEST ( $_GET + $_POST )
+// From wp-includes/load.php
 wp_magic_quotes();
 
 /**
@@ -254,6 +269,8 @@ do_action( 'sanitize_comment_cookies' );
  * @global object $wp_the_query
  * @since 2.0.0
  */
+ 
+// From wp-includes/query.php
 $GLOBALS['wp_the_query'] = new WP_Query();
 
 /**
@@ -269,6 +286,8 @@ $GLOBALS['wp_query'] = $GLOBALS['wp_the_query'];
  * @global object $wp_rewrite
  * @since 1.5.0
  */
+ 
+// From wp-includes/rewrite.php
 $GLOBALS['wp_rewrite'] = new WP_Rewrite();
 
 /**
@@ -276,6 +295,7 @@ $GLOBALS['wp_rewrite'] = new WP_Rewrite();
  * @global object $wp
  * @since 2.0.0
  */
+// From wp-includes/class-wp.php
 $GLOBALS['wp'] = new WP();
 
 /**
@@ -283,6 +303,8 @@ $GLOBALS['wp'] = new WP();
  * @global object $wp_widget_factory
  * @since 2.8.0
  */
+
+// From wp-includes/widgets.php
 $GLOBALS['wp_widget_factory'] = new WP_Widget_Factory();
 
 /**
@@ -290,6 +312,9 @@ $GLOBALS['wp_widget_factory'] = new WP_Widget_Factory();
  * @global object $wp_roles
  * @since 2.0.0
  */
+ 
+// From wp-includes/capibilities.php
+
 $GLOBALS['wp_roles'] = new WP_Roles();
 
 /**
